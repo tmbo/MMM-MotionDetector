@@ -1,4 +1,5 @@
 const NodeHelper = require("node_helper");
+const http = require('http');
 const exec = require("child_process").exec;
 const Log = require("../../js/logger");
 
@@ -16,6 +17,7 @@ module.exports = NodeHelper.create({
    *
    */
   activateMonitor: function () {
+    self = this;
     this.isMonitorOn(function (result) {
       if (!result) {
         exec("vcgencmd display_power 1", function (err, out, code) {
@@ -25,9 +27,20 @@ module.exports = NodeHelper.create({
             Log.info("MMM-MotionDetector: monitor has been activated.");
           }
         });
+        self.blink();
       }
     });
+    this.started = false;
   },
+
+  blink: function () {
+		http.get('http://localhost:7878/state?state=alert', (resp) => {
+			Log.debug("blinked");
+
+		}).on("error", (err) => {
+			Log.error("failed to blink: " + err.message);
+		});
+	},
 
   /**
    *
@@ -44,6 +57,7 @@ module.exports = NodeHelper.create({
         });
       }
     });
+    this.started = false;
   },
 
   /**

@@ -17,7 +17,7 @@ Module.register("MMM-MotionDetector", {
   error: null,
 
   getHeader: function () {
-    return "MMM-MotionDetector";
+    return null;
   },
 
   getScripts: function () {
@@ -46,6 +46,19 @@ Module.register("MMM-MotionDetector", {
     }
   },
 
+  notificationReceived: function (notification, payload = null, sender = null) {
+    switch (notification) {
+      case "WAKEUP":
+      	if(this.poweredOff) {
+					this.lastTimeMotionDetected = new Date();
+					this.poweredOff = false;
+					this.poweredOffTime = this.poweredOffTime + ((new Date()).getTime() - this.lastTimePoweredOff.getTime());
+					this.sendSocketNotification("MOTION_DETECTED", {score: 0});
+				}
+        break
+    }
+  },
+
   start: function () {
     Log.info("MMM-MotionDetector: starting up");
 
@@ -66,6 +79,9 @@ Module.register("MMM-MotionDetector", {
     cameraPreview.appendChild(video);
 
     DiffCamEngine.init({
+      pixelDiffThreshold: 7,
+			captureWidth: 642,
+			captureHeight: 482,
       video: video,
       deviceId: this.config.deviceId,
       captureIntervalTime: this.config.captureIntervalTime,
